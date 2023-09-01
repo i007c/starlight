@@ -1,0 +1,11 @@
+gcc
+-std=c11
+-O0
+-g
+-pedantic
+-Wall
+-Wextra
+-Wpedantic
+-Werror
+-I.
+-D_GNU_SOURCE

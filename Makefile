@@ -2,7 +2,6 @@
 SOURCES = $(shell find src -type f -name "*.c" -not -path "*/.*")
 OBJECTS = $(addprefix build/, $(SOURCES:.c=.o))
 LIBNAME = ~/.local/lib/libstarlight
-HEADER  = ~/.local/include/starlight.h
 
 CC = gcc
 CFLAGS  = -std=c11 -O0 -g -pedantic -Wall -Wextra -Wpedantic -Werror
@@ -22,8 +21,6 @@ build/%.o: %.c $(HEADER)
 	@mkdir -p $(@D)
 	@$(CC) -c $(CFLAGS) $< -o $@
 
-$(HEADER): starlight.h
-	cp -f starlight.h $@
 
 clean:
 	rm -rf build $(LIBNAME).*

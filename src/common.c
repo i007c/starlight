@@ -1,42 +1,6 @@
 
 #include "starlight.h"
 
-
-uint16_t starlight_u16_be(Starlight *starlight) {
-    uint8_t a = *starlight->cursor++;
-    uint8_t b = *starlight->cursor++;
-
-    return (a << 8) + (b);
-}
-
-
-uint32_t starlight_u32_be(Starlight *starlight) {
-    uint8_t a = *starlight->cursor++;
-    uint8_t b = *starlight->cursor++;
-    uint8_t c = *starlight->cursor++;
-    uint8_t d = *starlight->cursor++;
-
-    return (a << 24) + (b << 16) + (c << 8) + (d);
-}
-
-uint8_t starlight_read_bit(Starlight *starlight) {
-    uint8_t c = (*starlight->cursor >> starlight->bit_idx) & 1;
-    starlight->bit_idx++;
-    if (starlight->bit_idx >= 8) {
-        starlight->cursor++;
-        starlight->bit_idx = 0;
-    }
-    return c;
-}
-
-uint32_t starlight_read_bits_be(Starlight *starlight, uint8_t count) {
-    uint32_t o = 0;
-    for (uint8_t ta = 0; ta < count; ta++) {
-        o |= starlight_read_bit(starlight) << ta;
-    }
-    return o;
-}
-
 static const uint32_t CRC_TABLE[256] = {
     0x00000000, 0x77073096, 0xEE0E612C, 0x990951BA, 0x076DC419, 0x706AF48F,
     0xE963A535, 0x9E6495A3, 0x0eDB8832, 0x79DCB8A4, 0xE0D5E91E, 0x97D2D988,
@@ -84,6 +48,8 @@ static const uint32_t CRC_TABLE[256] = {
 };
 
 uint32_t starlight_calc_crc(uint8_t *buffer, uint64_t length) {
+    printf("length: %ld\n", length);
+
     uint32_t crc = ~0u;
     for (uint32_t i = 0; i < length; i++) {
         crc = (crc >> 8) ^ CRC_TABLE[buffer[i] ^ (crc & 0xff)];

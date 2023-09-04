@@ -16,6 +16,7 @@ typedef enum {
     STARLIGHT_S_OUTPUT_DATA_IS_NULL,
     STARLIGHT_S_BUFFER_IS_NULL,
     STARLIGHT_S_MALLOC_FAILED,
+    STARLIGHT_S_NOT_IMPLEMENTED,
     STARLIGHT_S_LENGTH,
 } starlight_status_t;
 
@@ -30,7 +31,6 @@ typedef struct starlight_output_t {
     uint32_t height;
     uint32_t x;
     uint32_t y;
-    uint8_t *data;
 } StarlightOutput;
 
 typedef struct starlight_png_detail_t {
@@ -45,24 +45,30 @@ typedef struct starlight_png_detail_t {
     uint8_t z_comp_info;
     uint32_t z_win_size;
     uint8_t z_comp_level;
+    uint8_t bpp; // byte per pixel
+
+    // state variables
+    uint64_t sx;
+    uint64_t sy;
 } StarlightPngDetail;
 
+typedef struct starlight_buffer_t {
+    uint8_t bdx; // bit index
+    uint8_t *s; // start
+    uint8_t *c; // cursor
+    uint8_t *e; // end
+    uint64_t l; // length
+} StarlightBuffer;
+
 typedef struct starlight_t {
-    uint8_t *data;
-    uint64_t length;
-    uint8_t *cursor;
+    StarlightBuffer raw; // raw image data - full file input
+    StarlightBuffer cmp; // raw compressed data
+    StarlightBuffer out; // output pixels in RGBA
 
-    uint8_t bit_idx;
-
-    
-    // compressed data buffer
-    uint8_t *buffer;
-    uint64_t buffer_length;
     bool buffer_moved;
 
     starlight_image_format_t format;
-
-    StarlightPngDetail png_detail;
+    StarlightPngDetail png;
 
     uint32_t width;
     uint32_t height;
@@ -74,10 +80,6 @@ typedef struct starlight_t {
 
 
 /* common { */
-uint16_t starlight_u16_be(Starlight *starlight);
-uint32_t starlight_u32_be(Starlight *starlight);
-uint8_t  starlight_read_bit(Starlight *starlight);
-uint32_t starlight_read_bits_be(Starlight *starlight, uint8_t count);
 uint32_t starlight_calc_crc(uint8_t *buffer, uint64_t length);
 
 /* } */
@@ -88,7 +90,10 @@ const char *starlight_status_string(starlight_status_t status);
 /* } */
 
 /* png { */
-starlight_status_t starlight_inflate(Starlight *starlight);
+starlight_status_t starlight_inflate(
+    StarlightBuffer *input,
+    StarlightBuffer *output
+);
 bool starlight_png_check(Starlight *starlight);
 starlight_status_t starlight_png_load_header(Starlight *starlight);
 starlight_status_t starlight_png_loader(Starlight *starlight);
